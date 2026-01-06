@@ -150,23 +150,56 @@ This is** bold text** and this is * italic text *.
 
 ## Tables
 
-### Structure
+### Style Options (MD060)
 
-- **Proper Alignment**: Use proper column alignment with pipes
-- **Header Separation**: Include header separator row with dashes
-- **Consistent Spacing**: Maintain consistent spacing for readability
+Use one of the three valid table styles consistently. Do not mix styles within
+a single table.
+
+#### Aligned Style
+
+Pipes vertically aligned with spacing that matches cell content widths:
 
 ```markdown
-# Good
 | Column 1 | Column 2 | Column 3 |
 |----------|----------|----------|
 | Data 1   | Data 2   | Data 3   |
 | Data 4   | Data 5   | Data 6   |
+```
 
-# Bad
+#### Compact Style
+
+Single spaces surround cell content with minimal separator dashes:
+
+```markdown
+| Column 1 | Column 2 | Column 3 |
+| --- | --- | --- |
+| Data 1 | Data 2 | Data 3 |
+| Data 4 | Data 5 | Data 6 |
+```
+
+#### Tight Style
+
+No padding around cell content:
+
+```markdown
+|Column 1|Column 2|Column 3|
+|---|---|---|
+|Data 1|Data 2|Data 3|
+|Data 4|Data 5|Data 6|
+```
+
+### Common Mistakes
+
+```markdown
+# Bad - Missing closing pipe
 |Column 1|Column 2|
 |--|--|
 |Data 1|Data 2
+
+# Bad - Inconsistent spacing (mixed styles)
+| Column 1 |Column 2|
+|---|---|
+|Data 1 | Data 2|
 ```
 
 ## Special Elements
