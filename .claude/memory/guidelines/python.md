@@ -17,13 +17,27 @@ pyright
 
 ## Package Structure
 
-**Avoid unnecessary `__init__.py` files** unless you need API exposure or package initialization:
+### Always Create `__init__.py` (INP001)
+
+**Always include `__init__.py` in Python package directories.** Per Ruff INP001,
+a missing `__init__.py` is typically an oversight. Namespace packages (PEP 420)
+are rarely needed.
 
 ```python
+# Good - Package with __init__.py
+src/
+└── mypackage/
+    ├── __init__.py      # Required - marks directory as package
+    ├── core.py
+    └── utils.py
+
 # Good - API exposure in __init__.py
 from .core import MainClass
 from .utils import helper_function
 __all__ = ["MainClass", "helper_function"]
+
+# Good - Empty __init__.py is acceptable
+# (just create the file, can be empty)
 ```
 
 ### No sys.path Manipulation
@@ -679,7 +693,8 @@ def get_unique_names(users: list[dict]) -> set[str]:
 6. **File Operations**: Use `Path.open()` instead of `open()`
 7. **Exception Handling**: Use `logger.exception()` only at outermost layer; catch specific exceptions before generic `Exception`; use `(ExceptionA, ExceptionB)` for multiple exceptions; resource cleanup with `finally`
 8. **Testing**: Specific pytest.raises() patterns, simple assertions
-9. **Package Structure**: Avoid unnecessary `__init__.py` files, top-level imports only
+9. **Package Structure**: Always create `__init__.py` for packages (INP001),
+   top-level imports only
 10. **Class Design**: BaseModel for I/O boundaries, dataclass for internal logic
 11. **String Formatting**: Use f-strings only with placeholders, regular strings otherwise
 12. **DateTime**: Use `datetime.UTC` instead of `timezone.utc`
