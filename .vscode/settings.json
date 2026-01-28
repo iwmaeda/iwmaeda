@@ -1,14 +1,33 @@
 {
-  "python.analysis.diagnosticMode": "workspace",
-  "python.analysis.typeCheckingMode": "basic",
+  // ---------------------------------------------------------
+  // 言語サーバー設定 (Pylance無効化 -> Pyright有効化)
+  // ---------------------------------------------------------
+  // Python拡張機能標準の言語サーバー(Pylance/Jedi)を無効化
+  "python.languageServer": "None",
+
+  // ---------------------------------------------------------
+  // Ruff設定 (Linter & Formatter)
+  // ---------------------------------------------------------
+  "ruff.lint.enable": true,
+  "ruff.organizeImports": true, // organizeImportsはRuffに任せる
+
+  // ---------------------------------------------------------
+  // エディタ設定
+  // ---------------------------------------------------------
   "editor.formatOnSave": true,
   "editor.formatOnPaste": false,
+
+  // 除外設定
   "files.exclude": {
     "**/__pycache__": true,
     "**/.mypy_cache": true,
     "**/.pytest_cache": true,
     "**/.ruff_cache": true
   },
+
+  // ---------------------------------------------------------
+  // 言語ごとのフォーマッター設定
+  // ---------------------------------------------------------
   "[json][jsonc]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
@@ -16,12 +35,19 @@
     "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
   },
   "[python]": {
+    // フォーマッターとしてRuffを指定
     "editor.defaultFormatter": "charliermarsh.ruff",
     "editor.codeActionsOnSave": {
-      "source.organizeImports": "always"
+      // 保存時にRuffによるimport整理を実行
+      "source.organizeImports": "explicit"
     }
   },
+
+  // ---------------------------------------------------------
+  // その他拡張機能設定
+  // ---------------------------------------------------------
   "evenBetterToml.formatter.arrayTrailingComma": true,
   "evenBetterToml.formatter.allowedBlankLines": 1,
-  "evenBetterToml.formatter.columnWidth": 80
+  "evenBetterToml.formatter.columnWidth": 80,
+  "python-envs.pythonProjects": []
 }
