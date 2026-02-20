@@ -30,3 +30,6 @@ jobs:
 
       - name: Run type check
         run: uv run pyright
+
+      - name: Run markdown lint
+        run: uv run pymarkdown scan .
