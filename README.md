@@ -64,6 +64,40 @@ DDDに基づく設計でAWS Lambda上に構築。
 
 詳細な実装方針は、 [python.md](.claude/memory/guidelines/python.md) を参照してください。
 
+## 開発手順
+
+### セットアップ
+
+```bash
+# 依存パッケージのインストール (Python)
+uv sync
+
+# 依存パッケージのインストール (Node.js / Markdown lint)
+npm install
+```
+
+### テスト
+
+```bash
+uv run pytest
+```
+
+### リント・型チェック
+
+```bash
+# Python リント (自動修正あり)
+uv run ruff check --fix .
+
+# Python フォーマット
+uv run ruff format .
+
+# 型チェック
+uv run pyright
+
+# Markdown リント
+npm run lint:md
+```
+
 ## GitHub
 
 [github.com/iwmaeda](https://github.com/iwmaeda)

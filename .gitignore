@@ -196,6 +196,9 @@ poetry.toml
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,python
 
+# Node.js
+node_modules/
+
 # Playground
 playground/
 tmp/

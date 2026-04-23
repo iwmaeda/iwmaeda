@@ -19,8 +19,14 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+          cache: "npm"
+
       - name: Install dependencies
-        run: uv sync
+        run: uv sync && npm ci
 
       - name: Run format check
         run: uv run ruff format . --check
@@ -32,4 +38,4 @@ jobs:
         run: uv run pyright
 
       - name: Run markdown lint
-        run: uv run pymarkdown scan .
+        run: npm run lint:md
