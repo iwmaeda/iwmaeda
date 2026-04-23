@@ -63,6 +63,7 @@ reportMatchNotExhaustive = true
 
 [tool.ruff]
 line-length = 120
+exclude = [".venv/", "node_modules/", "playground/"]
 
 [tool.ruff.lint]
 # https://docs.astral.sh/ruff/rules/
@@ -115,7 +116,6 @@ ignore = [
     "RUF002", # ambiguous-unicode-character-docstring
     "RUF003", # ambiguous-unicode-character-comment
 ]
-exclude = [".venv/", "node_modules/", "playground/"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**.py" = ["E401", "S101", "S105", "S106", "W291", "PT006"]
