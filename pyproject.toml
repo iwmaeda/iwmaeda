@@ -7,11 +7,7 @@ requires-python = ">=3.14"
 dependencies = []
 
 [dependency-groups]
-dev = [
-    "pyright>=1.1.407",
-    "pytest>=9.0.2",
-    "ruff>=0.14.10",
-]
+dev = ["pyright>=1.1.407", "pytest>=9.0.2", "ruff>=0.14.10"]
 
 [tool.hatch.build.targets.sdist]
 include = ["src/iwmaeda"]
@@ -27,7 +23,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.pyright]
-exclude = [".venv", "**/__pycache__", "playground"]
+exclude = [".venv", "**/__pycache__", "playground", "node_modules"]
 ignore = []
 stubPath = ""
 executionEnvironments = []
@@ -63,7 +59,7 @@ reportMatchNotExhaustive = true
 
 [tool.ruff]
 line-length = 120
-exclude = [".venv/", "node_modules/", "playground/"]
+exclude = [".venv", "**/__pycache__", "playground", "node_modules"]
 
 [tool.ruff.lint]
 # https://docs.astral.sh/ruff/rules/
