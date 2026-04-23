@@ -1,0 +1,12 @@
+// markdownlint-cli2 CLI 設定
+// ルールは .markdownlint.json に定義
+// VS Code 拡張機能 (DavidAnson.vscode-markdownlint) は
+// .markdownlint.json と .markdownlintignore を自動読み込みする
+{
+  "ignores": [
+    ".claude/**",
+    ".git/**",
+    ".venv/**",
+    "node_modules/**"
+  ]
+}

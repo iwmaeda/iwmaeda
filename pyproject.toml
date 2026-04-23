@@ -8,7 +8,6 @@ dependencies = []
 
 [dependency-groups]
 dev = [
-    "pymarkdownlnt>=0.9.35",
     "pyright>=1.1.407",
     "pytest>=9.0.2",
     "ruff>=0.14.10",
@@ -126,8 +125,3 @@ max-complexity = 15
 
 [tool.ruff.lint.flake8-bugbear]
 extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]
-
-[tool.pymarkdown]
-extensions.markdown-tables.enabled = true
-plugins.md013.enabled = true
-plugins.md013.line_length = 120
