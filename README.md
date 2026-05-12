@@ -29,7 +29,7 @@ AIエンジニア。Pythonを中心に、LLM統合・機械学習・
 ### 開発環境
 
 - パッケージ管理: uv, Poetry
-- 型チェック: Pyright (strict mode)
+- 型チェック: Pyright (strict mode), Pyrefly
 - リント: Ruff
 - テスト: pytest
 
@@ -93,6 +93,9 @@ uv run ruff format .
 
 # 型チェック
 uv run pyright
+
+# Pyrefly 型チェック
+uv run pyrefly check .
 
 # Markdown リント
 npm run lint:md
