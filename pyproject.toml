@@ -7,7 +7,12 @@ requires-python = ">=3.14"
 dependencies = []
 
 [dependency-groups]
-dev = ["pyright>=1.1.407", "pytest>=9.0.2", "ruff>=0.14.10"]
+dev = [
+    "pyrefly>=0.64.1",
+    "pyright>=1.1.407",
+    "pytest>=9.0.2",
+    "ruff>=0.14.10",
+]
 
 [tool.hatch.build.targets.sdist]
 include = ["src/iwmaeda"]
@@ -21,6 +26,10 @@ include = ["src/iwmaeda"]
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.pyrefly]
+project_excludes = [".venv", "**/__pycache__", "playground", "node_modules"]
+python_version = "3.14"
 
 [tool.pyright]
 exclude = [".venv", "**/__pycache__", "playground", "node_modules"]
