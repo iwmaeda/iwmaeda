@@ -7,7 +7,13 @@ requires-python = ">=3.14"
 dependencies = []
 
 [dependency-groups]
-dev = ["pyrefly>=0.64.1", "pyright>=1.1.407", "pytest>=9.0.2", "ruff>=0.14.10"]
+dev = [
+    "pyrefly>=0.64.1",
+    "pyright>=1.1.407",
+    "pytest>=9.0.2",
+    "ruff>=0.14.10",
+    "ty>=0.0.60",
+]
 
 [tool.hatch.build.targets.sdist]
 include = ["src/iwmaeda"]
@@ -60,6 +66,20 @@ reportUnusedCallResult = "warning"
 reportUnusedExpression = true
 reportUnnecessaryTypeIgnoreComment = true
 reportMatchNotExhaustive = true
+
+[tool.ty.environment]
+python-version = "3.14"
+python = ".venv"
+root = ["src"]
+
+[tool.ty.src]
+exclude = [".venv", "**/__pycache__", "playground", "node_modules"]
+
+[tool.ty.rules]
+# ty はデフォルトで invalid-method-override / unresolved-import / redundant-cast を
+# error 扱いする。default が warn の `deprecated` のみ error に引き上げ、
+# Pyright の strict ポリシー (reportDeprecated = true) と整合させる。
+deprecated = "error"
 
 [tool.ruff]
 line-length = 120

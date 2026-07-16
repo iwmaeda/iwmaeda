@@ -3,9 +3,29 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "lint:md": "markdownlint-cli2 \"**/*.md\""
+    "format": "prettier --write \"**/*.{json,jsonc,yml,yaml,md}\"",
+    "format:check": "prettier --check \"**/*.{json,jsonc,yml,yaml,md}\"",
+    "lint:md": "markdownlint-cli2 \"**/*.md\"",
+    "lint:md:fix": "markdownlint-cli2 --fix \"**/*.md\"",
+    "typecheck": "uv run pyright && uv run pyrefly check . && uv run ty check .",
+    "test": "uv run pytest",
+    "check:all": "npm run format:check && npm run lint:md && uv run ruff format . --check && uv run ruff check . && npm run typecheck",
+    "fix:all": "npm run format && npm run lint:md:fix && uv run ruff format . && uv run ruff check --fix ."
+  },
+  "prettier": {
+    "printWidth": 100,
+    "proseWrap": "preserve",
+    "overrides": [
+      {
+        "files": "*.jsonc",
+        "options": {
+          "trailingComma": "none"
+        }
+      }
+    ]
   },
   "devDependencies": {
-    "markdownlint-cli2": "^0.22.1"
+    "markdownlint-cli2": "^0.22.1",
+    "prettier": "^3.8.3"
   }
 }
