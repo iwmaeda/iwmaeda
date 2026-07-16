@@ -1,0 +1,13 @@
+# Dependencies / venv
+node_modules/
+.venv/
+
+# Caches / build output
+.ruff_cache/
+.pytest_cache/
+dist/
+build/
+
+# Machine-generated lockfiles
+package-lock.json
+uv.lock

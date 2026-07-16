@@ -2,43 +2,40 @@ name: ci
 
 on:
   push:
-    branches:
-      - "**"
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  format-and-lint:
+  check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.14"
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "lts/*"
-          cache: "npm"
+      - name: Set up mise
+        uses: jdx/mise-action@v4
 
       - name: Install dependencies
-        run: uv sync && npm ci
+        run: |
+          uv sync --locked
+          npm ci
 
-      - name: Run format check
-        run: uv run ruff format . --check
+      - name: Static checks (prettier / markdownlint / ruff / pyright / pyrefly / ty)
+        run: npm run check:all
 
-      - name: Run lint check
-        run: uv run ruff check .
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
 
-      - name: Run type check
-        run: uv run pyright
+      - name: Set up mise
+        uses: jdx/mise-action@v4
 
-      - name: Run pyrefly type check
-        run: uv run pyrefly check .
+      - name: Install dependencies
+        run: uv sync --locked
 
-      - name: Run markdown lint
-        run: npm run lint:md
+      - name: Tests
+        run: npm test

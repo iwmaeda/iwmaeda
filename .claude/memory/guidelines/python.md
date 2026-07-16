@@ -13,6 +13,8 @@ Focuses on modern Python patterns and common AI agent mistakes that ruff cannot 
 ruff check --fix .
 ruff format .
 pyright
+pyrefly check .
+ty check .
 ```
 
 ## Package Structure
@@ -174,7 +176,7 @@ def validate_data(data: dict) -> None:
 def validate_config(config: dict) -> None:
     assert ("api_key" in config, "API key is required")  # Tuple always True!
 
-# Bad - If tuple (always True) 
+# Bad - If tuple (always True)
 def process_data(data: dict | None) -> str:
     if (data, "checking data"):  # Tuple always True!
         return json.dumps(data)
@@ -203,7 +205,8 @@ subprocess.run(["cmd", "arg"], shell=False)
 
 #### Logging Hierarchy Principle
 
-**CRITICAL: Use `logger.exception()` ONLY at the outermost layer (entry points).** Inner functions should simply `raise` or use exception chaining. This prevents duplicate error logging in call chains.
+**CRITICAL: Use `logger.exception()` ONLY at the outermost layer (entry points).** Inner functions
+should simply `raise` or use exception chaining. This prevents duplicate error logging in call chains.
 
 **Three-Layer Architecture:**
 
@@ -421,7 +424,7 @@ def process_data():
 ```python
 from pathlib import Path
 
-# Good - Use Path.open() 
+# Good - Use Path.open()
 def read_config(config_path: Path) -> dict:
     with config_path.open(encoding="utf-8") as f:
         return json.load(f)
@@ -473,13 +476,13 @@ async def fetch_multiple_items(urls: list[str]) -> dict[str, str]:
     results = {}
     async with asyncio.TaskGroup() as tg:
         tasks = {url: tg.create_task(fetch_data(url)) for url in urls}
-    
+
     for url, task in tasks.items():
         try:
             results[url] = task.result()
         except Exception as e:
             logger.error("Failed to fetch %s: %s", url, e)
-    
+
     return results
 
 # Legacy - asyncio.gather (Python 3.7+)
@@ -528,7 +531,7 @@ class Config:
     """Configuration with optimized memory usage."""
     max_size: float
     timeout: int
-    
+
     DEFAULT_TIMEOUT: ClassVar[int] = 30
 
 class Processor:
@@ -558,7 +561,7 @@ class APIRequest(BaseModel):
 class User:
     name: str
     email: str
-    
+
     def is_valid(self) -> bool:
         return bool(self.name and self.email)
 
@@ -574,7 +577,7 @@ class InternalData(BaseModel):
 # Good - String subclasses with __slots__ for memory efficiency
 class Symbol(str):
     __slots__ = ()
-    
+
     def __new__(cls, value: str) -> "Symbol":
         return super().__new__(cls, value.upper())
 
@@ -606,7 +609,7 @@ def test_invalid_calculation():
 def test_calculation_fails():
     with pytest.raises(Exception):  # Too broad
         calculate_value(-100)
-    
+
     with pytest.raises():  # No exception specified
         calculate_value(-100)
 ```
@@ -619,7 +622,7 @@ def test_calculations():
     result = calculate_interest(1000, 0.05)
     assert result > 1000
     assert result < 1100
-    
+
     data = create_test_data()
     assert len(data) == 5
     assert data.is_valid()
@@ -691,7 +694,8 @@ def get_unique_names(users: list[dict]) -> set[str]:
 4. **Security**: No eval/exec/shell=True, use proper exceptions over asserts
 5. **Performance**: Use `extend()` over loops, `enumerate()` over manual indexing, set comprehensions
 6. **File Operations**: Use `Path.open()` instead of `open()`
-7. **Exception Handling**: Use `logger.exception()` only at outermost layer; catch specific exceptions before generic `Exception`; use `(ExceptionA, ExceptionB)` for multiple exceptions; resource cleanup with `finally`
+7. **Exception Handling**: Use `logger.exception()` only at outermost layer; catch specific exceptions
+   before generic `Exception`; use `(ExceptionA, ExceptionB)` for multiple exceptions; resource cleanup with `finally`
 8. **Testing**: Specific pytest.raises() patterns, simple assertions
 9. **Package Structure**: Always create `__init__.py` for packages (INP001),
    top-level imports only
