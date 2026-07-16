@@ -24,7 +24,7 @@ and compatibility across different markdown parsers and platforms.
 
 ###Bad - No space after hash
 
-## Bad - Multiple spaces
+##  Bad - Multiple spaces
 
 # Bad
 
@@ -191,9 +191,9 @@ Single spaces surround cell content with minimal separator dashes:
 
 ```markdown
 | Column 1 | Column 2 | Column 3 |
-| -------- | -------- | -------- |
-| Data 1   | Data 2   | Data 3   |
-| Data 4   | Data 5   | Data 6   |
+| --- | --- | --- |
+| Data 1 | Data 2 | Data 3 |
+| Data 4 | Data 5 | Data 6 |
 ```
 
 #### Tight Style
@@ -201,10 +201,10 @@ Single spaces surround cell content with minimal separator dashes:
 No padding around cell content:
 
 ```markdown
-| Column 1 | Column 2 | Column 3 |
-| -------- | -------- | -------- |
-| Data 1   | Data 2   | Data 3   |
-| Data 4   | Data 5   | Data 6   |
+|Column 1|Column 2|Column 3|
+|---|---|---|
+|Data 1|Data 2|Data 3|
+|Data 4|Data 5|Data 6|
 ```
 
 ### Common Mistakes
@@ -212,15 +212,15 @@ No padding around cell content:
 ```markdown
 # Bad - Missing closing pipe
 
-| Column 1 | Column 2 |
-| -------- | -------- |
-| Data 1   | Data 2   |
+|Column 1|Column 2|
+|--|--|
+|Data 1|Data 2
 
 # Bad - Inconsistent spacing (mixed styles)
 
-| Column 1 | Column 2 |
-| -------- | -------- |
-| Data 1   | Data 2   |
+| Column 1 |Column 2|
+|---|---|
+|Data 1 | Data 2|
 ```
 
 ## Special Elements

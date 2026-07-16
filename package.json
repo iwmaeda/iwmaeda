@@ -15,6 +15,7 @@
   "prettier": {
     "printWidth": 100,
     "proseWrap": "preserve",
+    "embeddedLanguageFormatting": "off",
     "overrides": [
       {
         "files": "*.jsonc",

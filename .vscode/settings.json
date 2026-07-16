@@ -1,9 +1,6 @@
 {
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
-  },
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
@@ -24,7 +21,6 @@
       "source.organizeImports": "explicit"
     }
   },
-  "eslint.validate": ["javascript", "typescript"],
   "files.exclude": {
     "**/dist": true
   }
