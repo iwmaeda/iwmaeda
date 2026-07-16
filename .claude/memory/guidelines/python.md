@@ -13,6 +13,8 @@ Focuses on modern Python patterns and common AI agent mistakes that ruff cannot 
 ruff check --fix .
 ruff format .
 pyright
+pyrefly check .
+ty check .
 ```
 
 ## Package Structure

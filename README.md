@@ -7,7 +7,7 @@ AIエンジニア。Pythonを中心に、LLM統合・機械学習・
 
 ### 言語・フレームワーク
 
-- Python 3.12+ (メイン)
+- Python 3.14+ (メイン)
 - TypeScript (インフラ・フロントエンド)
 
 ### AI/ML
@@ -28,9 +28,11 @@ AIエンジニア。Pythonを中心に、LLM統合・機械学習・
 
 ### 開発環境
 
+- ツールチェーン管理: mise (Node.js / Python / uv を固定)
 - パッケージ管理: uv, Poetry
-- 型チェック: Pyright (strict mode), Pyrefly
-- リント: Ruff
+- 型チェック: Pyright (strict mode), Pyrefly, ty
+- リント: Ruff (Python), markdownlint-cli2 (Markdown)
+- フォーマット: Ruff (Python), Prettier (JSON / YAML / Markdown)
 - テスト: pytest
 
 ## プロジェクト経験
@@ -69,36 +71,49 @@ DDDに基づく設計でAWS Lambda上に構築。
 ### セットアップ
 
 ```bash
+# ツールチェーン (Node.js / Python / uv) を用意
+mise install
+
 # 依存パッケージのインストール (Python)
 uv sync
 
-# 依存パッケージのインストール (Node.js / Markdown lint)
+# 依存パッケージのインストール (Node.js / Prettier・markdownlint)
 npm install
 ```
 
 ### テスト
 
 ```bash
-uv run pytest
+uv run pytest   # npm test でも可
 ```
 
-### リント・型チェック
+### リント・型チェック・フォーマット
+
+日常的には統合スクリプトを使う。個別コマンドは必要に応じて。
 
 ```bash
-# Python リント (自動修正あり)
-uv run ruff check --fix .
+# すべてのチェックを実行 (Prettier / markdownlint / Ruff / Pyright / Pyrefly / ty)
+npm run check:all
 
-# Python フォーマット
+# 自動修正を一括適用 (Prettier / markdownlint / Ruff)
+npm run fix:all
+```
+
+個別コマンド:
+
+```bash
+# Python リント (自動修正あり) / フォーマット
+uv run ruff check --fix .
 uv run ruff format .
 
-# 型チェック
+# 型チェック (Pyright + Pyrefly + ty)
 uv run pyright
-
-# Pyrefly 型チェック
 uv run pyrefly check .
+uv run ty check .
 
-# Markdown リント
+# Markdown リント / JSON・YAML・Markdown フォーマット
 npm run lint:md
+npm run format
 ```
 
 ## GitHub

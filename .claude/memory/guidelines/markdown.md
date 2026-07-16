@@ -14,19 +14,25 @@ This document defines markdown formatting standards and best practices to ensure
 
 ```markdown
 # Good
+
 ## Good Subheading
+
 ### Good Sub-subheading
 
 # Bad
+
 ###Bad - No space after hash
-##  Bad - Multiple spaces
+
+## Bad - Multiple spaces
+
 # Bad
+
 #### Bad - Skipped heading level
 ```
 
 ### Line Length
 
-- **Limit**: Keep lines to 80 characters maximum for better readability
+- **Limit**: Keep lines to 120 characters maximum for better readability
 - **Word Wrapping**: Break long lines at natural word boundaries
 - **URLs**: Long URLs in links are acceptable exceptions
 
@@ -41,17 +47,21 @@ This document defines markdown formatting standards and best practices to ensure
 
 ```markdown
 # Good
-* First item
-* Second item
-  * Nested item
-  * Another nested item
-* Third item
+
+- First item
+- Second item
+  - Nested item
+  - Another nested item
+- Third item
 
 # Bad
-* First item
-- Second item (inconsistent marker)
-    * Too much indentation
-* Third item
+
+- First item
+
+* Second item (inconsistent marker)
+  - Too much indentation
+
+- Third item
 ```
 
 ### Ordered Lists
@@ -82,12 +92,14 @@ This document defines markdown formatting standards and best practices to ensure
 
 ````markdown
 # Good
+
 ```python
 def example():
     return "Hello, World!"
 ```
 
 # Bad
+
 ```
 def example():
     return "Hello, World!"
@@ -109,10 +121,12 @@ def example():
 
 ```markdown
 # Good
+
 [Markdown Guide](https://www.markdownguide.org/)
 Learn more about [markdown syntax][md-syntax].
 
 # Bad
+
 Click [here](https://www.markdownguide.org/) for more info.
 [https://www.markdownguide.org/](https://www.markdownguide.org/)
 
@@ -126,9 +140,11 @@ Click [here](https://www.markdownguide.org/) for more info.
 
 ```markdown
 # Good
+
 ![Screenshot of application dashboard](./images/dashboard.png)
 
 # Bad
+
 ![](./images/dashboard.png)
 ```
 
@@ -142,9 +158,11 @@ Click [here](https://www.markdownguide.org/) for more info.
 
 ```markdown
 # Good
-This is **bold text** and this is *italic text*.
+
+This is **bold text** and this is _italic text_.
 
 # Bad
+
 This is** bold text** and this is * italic text *.
 ```
 
@@ -161,7 +179,7 @@ Pipes vertically aligned with spacing that matches cell content widths:
 
 ```markdown
 | Column 1 | Column 2 | Column 3 |
-|----------|----------|----------|
+| -------- | -------- | -------- |
 | Data 1   | Data 2   | Data 3   |
 | Data 4   | Data 5   | Data 6   |
 ```
@@ -172,9 +190,9 @@ Single spaces surround cell content with minimal separator dashes:
 
 ```markdown
 | Column 1 | Column 2 | Column 3 |
-| --- | --- | --- |
-| Data 1 | Data 2 | Data 3 |
-| Data 4 | Data 5 | Data 6 |
+| -------- | -------- | -------- |
+| Data 1   | Data 2   | Data 3   |
+| Data 4   | Data 5   | Data 6   |
 ```
 
 #### Tight Style
@@ -182,24 +200,26 @@ Single spaces surround cell content with minimal separator dashes:
 No padding around cell content:
 
 ```markdown
-|Column 1|Column 2|Column 3|
-|---|---|---|
-|Data 1|Data 2|Data 3|
-|Data 4|Data 5|Data 6|
+| Column 1 | Column 2 | Column 3 |
+| -------- | -------- | -------- |
+| Data 1   | Data 2   | Data 3   |
+| Data 4   | Data 5   | Data 6   |
 ```
 
 ### Common Mistakes
 
 ```markdown
 # Bad - Missing closing pipe
-|Column 1|Column 2|
-|--|--|
-|Data 1|Data 2
+
+| Column 1 | Column 2 |
+| -------- | -------- |
+| Data 1   | Data 2   |
 
 # Bad - Inconsistent spacing (mixed styles)
-| Column 1 |Column 2|
-|---|---|
-|Data 1 | Data 2|
+
+| Column 1 | Column 2 |
+| -------- | -------- |
+| Data 1   | Data 2   |
 ```
 
 ## Special Elements
@@ -216,11 +236,13 @@ No padding around cell content:
 
 ```markdown
 # Good
+
 > This is a blockquote.
 > It can span multiple lines.
 
 # Bad
->This is a blockquote without proper spacing.
+
+> This is a blockquote without proper spacing.
 ```
 
 ## Validation
