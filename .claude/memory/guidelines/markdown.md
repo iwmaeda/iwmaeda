@@ -1,6 +1,7 @@
 # Markdown Editing Guidelines
 
-This document defines markdown formatting standards and best practices to ensure consistency, readability, and compatibility across different markdown parsers and platforms.
+This document defines markdown formatting standards and best practices to ensure consistency, readability,
+and compatibility across different markdown parsers and platforms.
 
 ## Document Structure
 
