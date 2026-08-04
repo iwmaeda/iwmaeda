@@ -78,6 +78,7 @@ DDDに基づく設計でAWS Lambda上に構築。
 | [docs/development/python.md](docs/development/python.md)                         | Python コーディング規約                      |
 | [docs/development/markdown.md](docs/development/markdown.md)                     | Markdown コーディング規約                    |
 | [docs/development/prompting.md](docs/development/prompting.md)                   | LLM プロンプト設計ガイド                     |
+| [docs/recommended/ccstatusline.md](docs/recommended/ccstatusline.md)             | ccstatusline のおすすめ設定                  |
 
 ## 開発手順
 

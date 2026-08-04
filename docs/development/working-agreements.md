@@ -74,3 +74,5 @@ trust_level = "trusted"
 status line は `bun x` 経由で `ccstatusline` を起動する。bun は `mise.toml` で固定しているため
 `mise install` で導入されるが、未導入の環境でも status line が表示されないだけで他の動作には影響しない。
 ウィジェットの構成は各開発者の `~/.config/ccstatusline/settings.json` に委ねており、リポジトリでは指定しない。
+強制はしないが、出発点として使える設定例を
+[recommended/ccstatusline.md](../recommended/ccstatusline.md) に置いている。
