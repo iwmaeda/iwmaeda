@@ -13,6 +13,7 @@ AI エージェント（Claude Code / Codex）と人間が共有する開発ド�
 | [development/python.md](./development/python.md)                         | Python コーディング規約                              |
 | [development/markdown.md](./development/markdown.md)                     | Markdown コーディング規約                            |
 | [development/prompting.md](./development/prompting.md)                   | LLM プロンプト設計ガイド                             |
+| [recommended/ccstatusline.md](./recommended/ccstatusline.md)             | ccstatusline（status line）のおすすめ設定            |
 
 ## 関連ドキュメント
 

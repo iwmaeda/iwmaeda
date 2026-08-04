@@ -18,7 +18,8 @@ iwmaeda/
 ├── scripts/                 # Utility scripts and examples
 ├── docs/                    # Shared documentation (source of truth)
 │   ├── README.md            # Documentation index
-│   └── development/         # Guidelines shared by Claude Code and Codex
+│   ├── development/         # Guidelines shared by Claude Code and Codex
+│   └── recommended/         # Optional recommended configs (not enforced)
 ├── .claude/                 # Claude Code configuration
 │   └── settings.json        # Repository-wide settings (status line)
 ├── .codex/                  # Codex configuration
