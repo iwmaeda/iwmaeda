@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "charliermarsh.ruff",
+    "esbenp.prettier-vscode",
+    "DavidAnson.vscode-markdownlint",
+    "ms-python.python",
+    "ms-python.debugpy",
+    "tamasfe.even-better-toml"
+  ]
+}

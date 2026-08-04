@@ -1,6 +1,10 @@
 {
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
+  // Prettier covers JSON/YAML/Markdown and Ruff covers Python, but neither
+  // touches .toml — these keep pyproject.toml clean without an .editorconfig.
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
