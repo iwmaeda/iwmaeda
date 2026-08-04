@@ -5,6 +5,6 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "bun x ccusage statusline"
+    "command": "bun x ccstatusline@latest"
   }
 }
