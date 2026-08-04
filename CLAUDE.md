@@ -1,24 +1,21 @@
 # CLAUDE.md
 
-## Project Configuration
+## Shared Project Guidance
 
-This file contains Claude AI assistant configuration for the project.
-The project-specific information and technical details are maintained in
-the referenced documentation files.
+作業を始める前に、次の共有ドキュメントを参照してください。
 
-@.claude/memory/project/project-structure.md
+@docs/development/project-structure.md
+@docs/development/working-agreements.md
 
 ## Coding Guidelines
 
-When editing files, Claude must follow the established coding standards and
-formatting guidelines for consistency and quality.
-Reference the appropriate guideline files based on the type of file being edited:
+変更対象に応じて、該当する共有ガイドを参照してください。
 
-**Python files (.py, .pyi):**
-@.claude/memory/guidelines/python.md
+**Python:**
+@docs/development/python.md
 
-**Markdown files (.md):**
-@.claude/memory/guidelines/markdown.md
+**Markdown:**
+@docs/development/markdown.md
 
-**LLM prompt development and optimization:**
-@.claude/memory/guidelines/prompting.md
+**LLM プロンプト:**
+@docs/development/prompting.md

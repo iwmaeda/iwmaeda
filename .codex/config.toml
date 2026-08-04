@@ -1,0 +1,25 @@
+# Codex のリポジトリ共通デフォルト。モデル・provider・reasoning effort と、status line 以外の
+# UI 設定は各開発者の個人プロファイル (~/.codex/config.toml) から継承する。
+# ここにはリポジトリ全体のポリシーだけをコミットする。
+#
+# このレイヤは trusted なプロジェクトでのみ読み込まれる。初回の trust 設定と確認方法は
+# docs/development/working-agreements.md を参照。
+approval_policy = "on-request"
+approvals_reviewer = "auto_review"
+sandbox_mode = "workspace-write"
+
+[tui]
+status_line = [
+  "model-with-reasoning",
+  "context-remaining",
+  "weekly-limit",
+  "git-branch",
+  "current-dir",
+]
+status_line_use_colors = true
+
+[sandbox_workspace_write]
+# このリポジトリが必要とするネットワーク操作は `uv sync` と `npm ci` だけで、いずれも
+# 環境を変更する。既定ではシェルをオフラインに保ち、依存の再インストールが本当に必要な
+# ときだけ Codex にスコープ付きの承認を求めさせる。
+network_access = false

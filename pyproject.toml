@@ -29,7 +29,11 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.pyrefly]
-exclude = [".venv", "**/__pycache__", "playground", "node_modules"]
+# Pyrefly's key is `project-excludes`, not Pyright's `exclude`; using the latter
+# made pyrefly warn "Extra keys found in config" and ignore the exclusions.
+# project-excludes appends to the defaults, which already cover .venv,
+# **/__pycache__ and node_modules.
+project-excludes = ["**/playground/**"]
 python_version = "3.14"
 
 [tool.pyright]
@@ -93,7 +97,8 @@ select = [
     "ASYNC",   # flake8-async
     "S",       # flake8-bandit
     "B",       # flake8-bugbear
-    "A",       # flake8-builtins 
+    "A",       # flake8-builtins
+    "ANN",     # flake8-annotations
     "C4",      # flake8-comprehensions
     "T10",     # flake8-debugger
     "FA",      # flake8-future-annotations
@@ -101,7 +106,7 @@ select = [
     "ICN",     # flake8-import-conventions
     "LOG",     # flake8-logging
     "PIE",     # flake8-pie
-    "PYI",     # flake8-pyi 
+    "PYI",     # flake8-pyi
     "PT",      # flake8-pytest-style
     "Q",       # flake8-quotes
     "RSE",     # flake8-raise
@@ -145,3 +150,10 @@ max-complexity = 15
 
 [tool.ruff.lint.flake8-bugbear]
 extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# No markers are declared: there are no integration tests or external services.
+# --strict-markers turns any stray @pytest.mark into an error, so a second test
+# category has to be declared here deliberately rather than appearing by typo.
+addopts = ["--strict-markers", "--strict-config"]

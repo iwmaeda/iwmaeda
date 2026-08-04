@@ -202,3 +202,9 @@ node_modules/
 # Playground
 playground/
 tmp/
+
+# AI agent local state
+#   リポジトリ共通のエージェント設定はコミットする (.claude/settings.json, .codex/config.toml)。
+#   開発者ごとのローカル状態はコミットしない。
+.claude/settings.local.json
+.claude/*.local.json
