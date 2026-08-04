@@ -28,7 +28,7 @@ AIエンジニア。Pythonを中心に、LLM統合・機械学習・
 
 ### 開発環境
 
-- ツールチェーン管理: mise (Node.js / Python / uv を固定)
+- ツールチェーン管理: mise (Node.js / Python / uv / bun を固定)
 - パッケージ管理: uv, Poetry
 - 型チェック: Pyright (strict mode), Pyrefly, ty
 - リント: Ruff (Python), markdownlint-cli2 (Markdown)
@@ -64,14 +64,27 @@ DDDに基づく設計でAWS Lambda上に構築。
 - **セキュリティ**: 静的解析による脆弱性検出
 - **保守性**: モジュール化とドメイン駆動設計
 
-詳細な実装方針は、 [python.md](.claude/memory/guidelines/python.md) を参照してください。
+詳細な実装方針は、 [python.md](docs/development/python.md) を参照してください。
+
+## ドキュメント
+
+開発ドキュメントの正本は [`docs/`](docs/README.md) 配下にあり、Claude Code と Codex の
+両方が同じファイルを参照する。
+
+| ドキュメント                                                                     | 内容                                         |
+| -------------------------------------------------------------------------------- | -------------------------------------------- |
+| [docs/development/project-structure.md](docs/development/project-structure.md)   | ディレクトリ構成、ツールと設定ファイルの対応 |
+| [docs/development/working-agreements.md](docs/development/working-agreements.md) | 作業方針・検証・レビュー観点                 |
+| [docs/development/python.md](docs/development/python.md)                         | Python コーディング規約                      |
+| [docs/development/markdown.md](docs/development/markdown.md)                     | Markdown コーディング規約                    |
+| [docs/development/prompting.md](docs/development/prompting.md)                   | LLM プロンプト設計ガイド                     |
 
 ## 開発手順
 
 ### セットアップ
 
 ```bash
-# ツールチェーン (Node.js / Python / uv) を用意
+# ツールチェーン (Node.js / Python / uv / bun) を用意
 mise install
 
 # 依存パッケージのインストール (Python)
@@ -95,8 +108,15 @@ uv run pytest   # npm test でも可
 # すべてのチェックを実行 (Prettier / markdownlint / Ruff / Pyright / Pyrefly / ty)
 npm run check:all
 
+# 範囲を絞って実行
+npm run check:docs   # Prettier + markdownlint
+npm run check:py     # Ruff + Pyright + Pyrefly + ty
+
 # 自動修正を一括適用 (Prettier / markdownlint / Ruff)
 npm run fix:all
+
+# 依存関係の脆弱性チェック
+npm run audit
 ```
 
 個別コマンド:
