@@ -25,8 +25,8 @@ change to a pull request and back.
   scope, and request scoped approval before network access — `.codex/config.toml` sets `network_access = false`,
   and every `gh` call in the workflow needs the network.
 - Translate `Read` to file inspection, `Edit`/`Write` to patches, `Grep`/`Glob` to `rg`, and `Bash` to shell
-  execution. **Run the workflow's npm commands unprefixed** (`npm run check:all`, `npm test`) — mise's Linux
-  toolchain is already first on `PATH` in this environment, and CI invokes the same bare commands.
+  execution. Run the workflow's npm commands exactly as it writes them; its 注意 section says whether to prefix
+  them and why.
 - **The wait step has no Codex equivalent.** Step 8's script is written to be launched detached so the model is
   re-invoked once when it exits. Run it as an ordinary foreground shell command instead, keeping the script
   byte-identical and its 480-second budget intact, and re-run it while the verdict is `pending`. Step 12's CI wait
@@ -38,7 +38,6 @@ change to a pull request and back.
 
 ## Execute and verify
 
-Preserve the workflow's stop conditions, its abort paths, and its two invariants: never trigger a review unless
-`git rev-parse HEAD` differs from the previous trigger's HEAD, and never act on a review whose `commit_id` is not the
-pushed HEAD. Report the round count, the classification of every finding, the checks that ran, any check that could
-not run, and the reason for an abort.
+Preserve the workflow's stop conditions, its abort paths, and the invariants its 注意 section states — including the
+two it calls out for re-triggering and for acting on a review. Report the round count, the classification of every
+finding, the checks that ran, any check that could not run, and the reason for an abort.

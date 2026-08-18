@@ -47,8 +47,8 @@ CI（`.github/workflows/ci.yaml`）の各ジョブは同じ npm スクリプト�
 ## ワークフロー
 
 変更を PR に載せてレビューを回す作業は `/pr:review-loop`（Codex は `$review-loop`）を正本とする。
-ブランチ作成・検証・分割コミット・push・PR 作成・`@codex review` の起動・レビュー待ち・指摘の判定と修正・
-（任意で）マージ までを 1 つの手順として持ち、中断しても同じコマンドで再開できる。定義は
+ブランチ作成からマージまでを 1 つの手順として持ち、中断しても同じコマンドで再開できる。
+レビュアー・マージの有無・確認で止まるかどうかはフラグで決まる。手順とフラグの定義は
 [`.claude/commands/pr/review-loop.md`](../../.claude/commands/pr/review-loop.md)。
 
 ## レビュー観点

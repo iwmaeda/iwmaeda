@@ -151,13 +151,14 @@ allowed-tools: Bash(gh api *), Bash(gh pr *), Bash(gh repo *), Bash(git *), Bash
 
    ```bash
    set -uo pipefail
-   S=$(gh repo view --json nameWithOwner -q .nameWithOwner 2>/dev/null)
-   PR=$(gh pr list --head "$(git branch --show-current)" --state open --json number -q '.[0].number' 2>/dev/null)
-   [ -n "${S:-}" ] && [ -n "${PR:-}" ] || { echo "VERDICT=error reason=no-pr"; exit 0; }
+   S=$(timeout 25 gh repo view --json nameWithOwner -q .nameWithOwner 2>/dev/null) || { echo "VERDICT=error reason=api stage=setup"; exit 0; }
+   PR=$(timeout 25 gh pr list --head "$(git branch --show-current)" --state open --json number -q '.[0].number' 2>/dev/null) || { echo "VERDICT=error reason=api stage=setup"; exit 0; }
+   [ -n "${S:-}" ] || { echo "VERDICT=error reason=no-pr"; exit 0; }
+   case "${PR:-}" in ''|*[!0-9]*) echo "VERDICT=error reason=no-pr"; exit 0;; esac
    Q='query($o:String!,$n:String!,$p:Int!){repository(owner:$o,name:$n){pullRequest(number:$p){
    comments(last:30){nodes{createdAt databaseId body author{login __typename} reactionGroups{content users{totalCount}}}}
    reviews(last:10){nodes{submittedAt databaseId state author{login __typename} commit{oid}}}}}}'
-   J='.data.repository.pullRequest as $p|[($p.comments.nodes[]|select(.author.__typename!="Bot")|select(.body|test("^[@/](codex|gemini|claude) review([[:space:]]|$)"))|"TRIG \(.createdAt) \(.databaseId) \([.reactionGroups[]|select(.content=="THUMBS_UP")|.users.totalCount]|add // 0)"),($p.reviews.nodes[]|select(.author.__typename=="Bot")|"review \(.submittedAt) commit=\(.commit.oid[0:8]) \(.author.login) review_id=\(.databaseId)"),($p.comments.nodes[]|select(.author.__typename=="Bot")|select(.body|test("^## Summary of Changes")|not)|"comment \(.createdAt) \(.author.login) \(.body|split("\n")[0][0:110])")]|.[]'
+   J='.data.repository.pullRequest as $p|[($p.comments.nodes[]|select(.author.__typename!="Bot")|select(.body|test("^[@/](codex|gemini|claude) review([[:space:]]|$)"))|"TRIG \(.createdAt) \(.databaseId) \([.reactionGroups[]|select(.content=="THUMBS_UP")|.users.totalCount]|add // 0)"),($p.reviews.nodes[]|select(.author.__typename=="Bot")|select(.state!="DISMISSED")|"review \(.submittedAt) commit=\(.commit.oid[0:8]) \(.author.login) review_id=\(.databaseId)"),($p.comments.nodes[]|select(.author.__typename=="Bot")|select(.body|test("^## Summary of Changes")|not)|"comment \(.createdAt) \(.author.login) \(.body|split("\n")[0][0:110])")]|.[]'
    F=0; TS=""; END=$((SECONDS + 480))
    while [ "$SECONDS" -lt "$END" ]; do
      O=$(timeout 25 gh api graphql -F o="${S%%/*}" -F n="${S##*/}" -F p="$PR" -f query="$Q" --jq "$J" 2>/dev/null); r=$?
@@ -196,30 +197,41 @@ allowed-tools: Bash(gh api *), Bash(gh pr *), Bash(gh repo *), Bash(git *), Bash
    この repo には `copilot-pull-request-reviewer` の review が PR #1 / #2 に実在する）。
    そのうえで `VERDICT=review` は `commit=` を `git rev-parse --short=8 HEAD` と突き合わせる。
    一致しないときは `git merge-base --is-ancestor <commit> HEAD` で祖先かどうかを見る —— 祖先でも
-   ローカルにも無いのでもないなら、履歴が分岐しているので中断する:
+   ローカルにも無いのでもないなら、履歴が分岐しているので中断する。
 
-   | シグナル                                          | 判定             | 次の行動                                                      |
-   | ------------------------------------------------- | ---------------- | ------------------------------------------------------------- |
-   | `review` ＋ `commit` が HEAD と一致               | 継続             | 10 へ                                                         |
-   | `review` ＋ `commit` が HEAD の祖先               | 継続（1 度だけ） | 指摘は**捨てて** 7 を撃ち直す。2 度目は中断                   |
-   | `review` ＋ `commit` がローカルに無い             | **中断**         | `git fetch` して無ければ他者の push。手を止める               |
-   | `review` ＋ `commit` が HEAD でも祖先でもない     | **中断**         | 履歴が分岐している（reset / force push の跡）。手を止める     |
-   | `review` だが inline comment が 0 件              | **終了（成功）** | **判定は 10 の取得後**（8 は件数を引いていない）              |
-   | `comment` ＋ `Didn't find any major issues`       | **終了（成功）** | 12 へ                                                         |
-   | `comment` ＋ `You have reached your Codex usage…` | **中断**         | **再試行しない**。時間で回復する枠なので巡を消すだけ          |
-   | `comment` ＋ 上記以外の bot 本文                  | **中断**         | 本文を全文出して人に渡す。推測しない                          |
-   | `reaction`                                        | **終了（成功）** | 未観測の経路なので報告にその旨を書く                          |
-   | `pending`（`--timeout` 内）                       | 継続             | **7 は撃ち直さず** 8 だけを撃ち直す                           |
-   | `pending`（`--timeout` 超過）                     | **中断**         | codex は導入済みなので、無反応なら別の理由を探す              |
-   | 判定の bot login が 7 の表と違う                  | **中断**         | 別の bot の判定を今巡のものとして読まない。login を報告に出す |
-   | `EXTRA=` の 2 行目が付いている                    | 上の判定に従う   | 同じ巡に来た bot コメント。レート制限なら**中断が優先**       |
-   | `error reason=untriggered-verdict`                | **中断**         | **判定は在るがトリガーが無い**。`bot=` の本文で理由を見る     |
-   | `error reason=no-pr` / `no-trigger` / `api`       | **中断**         | 理由をそのまま報告する。`api` は 5 周連続の取得失敗           |
-   | `--max-rounds` 到達                               | **中断**         | 成功ではない。マージしない                                    |
+   **`--is-ancestor` は真偽値ではなく 3 値を返す。`$?` を見る**（実測値）—— `0` = 祖先、
+   `1` = 有効な commit だが祖先でない（履歴が分岐）、`128` = そもそもローカルに無い
+   （`fatal: Not a valid commit name`）。`if git merge-base …; then … else … fi` と書くと
+   **`128` が `1` に潰れ**、`git fetch` すべき場面を「分岐した」と誤診して中断する。
+   下の表の 3 行目と 4 行目は、この 2 つの終了コードの区別そのものである:
+
+   | シグナル                                          | 判定             | 次の行動                                                           |
+   | ------------------------------------------------- | ---------------- | ------------------------------------------------------------------ |
+   | `review` ＋ `commit` が HEAD と一致               | 継続             | 10 へ                                                              |
+   | `review` ＋ `commit` が HEAD の祖先               | 継続（1 度だけ） | 指摘は**捨てて** 7 を撃ち直す。2 度目は中断                        |
+   | `review` ＋ `commit` がローカルに無い（`128`）    | **中断**         | `git fetch` して無ければ他者の push。手を止める                    |
+   | `review` ＋ `commit` が祖先でもない（`1`）        | **中断**         | 履歴が分岐している（reset / force push の跡）。手を止める          |
+   | `review` だが inline comment が 0 件              | **終了（成功）** | **判定は 10 の取得後**（8 は件数を引いていない）                   |
+   | `comment` ＋ `Didn't find any major issues`       | **終了（成功）** | 12 へ                                                              |
+   | `comment` ＋ `You have reached your Codex usage…` | **中断**         | **再試行しない**。時間で回復する枠なので巡を消すだけ               |
+   | `comment` ＋ 上記以外の bot 本文                  | **中断**         | 本文を全文出して人に渡す。推測しない                               |
+   | `reaction`                                        | **終了（成功）** | 未観測の経路なので報告にその旨を書く                               |
+   | `pending`（`--timeout` 内）                       | 継続             | **7 は撃ち直さず** 8 だけを撃ち直す                                |
+   | `pending`（`--timeout` 超過）                     | **中断**         | codex は導入済みなので、無反応なら別の理由を探す                   |
+   | 判定の bot login が 7 の表と違う                  | **中断**         | 別の bot の判定を今巡のものとして読まない。login を報告に出す      |
+   | `EXTRA=` の 2 行目が付いている                    | 上の判定に従う   | 同じ巡に来た bot コメント。レート制限なら**中断が優先**            |
+   | `error reason=untriggered-verdict`                | **中断**         | **判定は在るがトリガーが無い**。`bot=` の本文で理由を見る          |
+   | `error reason=no-pr` / `no-trigger`               | **中断**         | 理由をそのまま報告する。PR の有無と手順 6 を疑う                   |
+   | `error reason=api`（`stage=setup` 無し）          | **中断**         | ループ内で 5 周連続の取得失敗。`gh` の疎通を疑う                   |
+   | `error reason=api stage=setup`                    | **中断**         | **PR を引く前に落ちた**。認証・ネットワークを疑う。PR 不在ではない |
+   | `--max-rounds` 到達                               | **中断**         | 成功ではない。マージしない                                         |
 
 10. 指摘を読む。**review の body は定型文で、指摘は inline review comment のほうに在る**。重大度は本文頭の
-    `![P1 Badge]` / `P2` / `P3` から採る。**`<review_id>` は 8 が `VERDICT=review …` 行の末尾に
-    `review_id=` として出している**ので、引き直さない:
+    `![P1 Badge]` / `P2` / `P3` から採る。**`<review_id>` は 8 が `VERDICT=review …` 行の
+    `review_id=` フィールドとして出している**ので、引き直さない。**キーで取る。位置で取らない** ——
+    8 は `review_id=` の後ろに `pr=…` と `trigger=…` を足すので、**行の末尾は `trigger=` である**。
+    「最後のフィールド」を取る実装は `trigger=` を掴み、下の `pull_request_review_id==` が
+    黙って空を返す（エラーにはならない）:
 
     ```bash
     gh api --paginate "repos/iwmaeda/iwmaeda/pulls/<n>/comments?per_page=100" \
@@ -273,32 +285,52 @@ allowed-tools: Bash(gh api *), Bash(gh pr *), Bash(gh repo *), Bash(git *), Bash
     殺されて何も出ない:
 
     ```bash
-    V=CI_WAIT=timeout
-    PR=$(gh pr list --head "$(git branch --show-current)" --state open --json number -q '.[0].number' 2>/dev/null)
-    [ -n "${PR:-}" ] || { echo "CI_WAIT=error reason=no-pr"; exit 0; }
+    V='CI_WAIT=timeout'; F=0
+    PR=$(timeout 25 gh pr list --head "$(git branch --show-current)" --state open --json number -q '.[0].number' 2>/dev/null) || { echo "CI_WAIT=error reason=api stage=setup"; exit 0; }
+    case "${PR:-}" in ''|*[!0-9]*) echo "CI_WAIT=error reason=no-pr"; exit 0;; esac
     for i in $(seq 1 20); do
       out=$(timeout 25 gh pr view "$PR" --json statusCheckRollup \
         --jq '.statusCheckRollup[]|"\(.status) \(.conclusion) \(.name)"' 2>/dev/null); r=$?
-      [ $r -ne 0 ] && { sleep 30; continue; }
+      if [ $r -ne 0 ]; then
+        F=$((F + 1)); [ $F -ge 5 ] && { echo "CI_WAIT=error reason=api pr=$PR"; exit 0; }; sleep 30; continue
+      fi
+      F=0
       k=$(printf '%s\n' "$out" | awk 'NF==0{next}{n++; if($1!="COMPLETED")p=1; else if($2!="SUCCESS")b=1}
-        END{print (n==0||p)?"retry":(b?"NOT_ALL_PASS":"ALL_PASS")}')
+        END{print (n==0||p)?"retry":(b?"CHECKS_FAILED":"ALL_PASS")}')
       [ "$k" = retry ] && { sleep 30; continue; }
       echo "$out"; V=$k; break
     done
     echo "$V"
     ```
 
-    出力は `ALL_PASS` / `NOT_ALL_PASS` / `CI_WAIT=timeout` / `CI_WAIT=error reason=no-pr` の 4 つ。
-    最後のものは**ブランチに開いている PR が無い**ので、マージではなく手順 6 の側を疑う。
+    出力は `ALL_PASS` / `CHECKS_FAILED` / `CI_WAIT=timeout` / `CI_WAIT=error reason=api`
+    （`stage=setup` 付きを含む）/ `CI_WAIT=error reason=no-pr` の 5 つ。
+    `no-pr` は**ブランチに開いている PR が無い**ので、マージではなく手順 6 の側を疑う。
+    `api` は**取得そのものが失敗した**ので、CI の遅さではなく `gh` の疎通を疑う。
 
-    **`ALL_PASS` を見ていないならマージしない。** そのうえでマージし、検算する。
+    **失敗側を `CHECKS_FAILED` と名付けているのは意図的** —— `NOT_ALL_PASS` のような名前だと
+    `ALL_PASS` を**部分文字列として含む**ので、`grep -q ALL_PASS` や `[[ "$V" == *ALL_PASS* ]]` が
+    **CI 失敗時にも真になる**。12 の awk が `$1 $2` を先に並べたのと同じで、穴は構造的に消す。
+
+    **マージしてよいのは `[ "$V" = "ALL_PASS" ]` が真のときだけ**（完全一致。部分一致や
+    「`ALL_PASS` という語が出力に在るか」で判定しない）。そのうえでマージし、検算する。
     **`sha=` で検査した commit を pin する** —— `ALL_PASS` を見た commit と、実際にマージされる
     commit が同じである保証は無い。不一致なら GitHub が 409 を返すので、fail-closed の側に倒れる:
 
     ```bash
     gh api -X PUT "repos/iwmaeda/iwmaeda/pulls/<n>/merge" \
       -f merge_method=merge -f sha="$(git rev-parse HEAD)"
-    gh pr view <n> --json state,mergedAt
+    gh pr view <n> --json state,mergedAt --jq '"MERGED=\(.state) at=\(.mergedAt)"'
+    ```
+
+    **`MERGED=MERGED` かつ `at=` が `null` でないときだけマージ成功と読む。** 各コマンドは
+    `&&` で繋がっておらず、`PUT` が 409（sha 不一致・conflict）や 405 で落ちても
+    **後続は変わらず成功する** —— `main` は元々在るので `git checkout main && git pull` は
+    マージの有無に関わらず通り、**未マージを「マージ済み」と報告できてしまう**（`--auto` では
+    誰も気付かない）。合格しなければ**ここで止め**、`PUT` のエラー本文を報告に出す。
+    合格したときだけ次へ進む:
+
+    ```bash
     git checkout main && git pull
     ```
 
@@ -387,6 +419,12 @@ allowed-tools: Bash(gh api *), Bash(gh pr *), Bash(gh repo *), Bash(git *), Bash
   トリガーが 0 件）。だから `TRIG` が無いときは bot 行の有無で `no-trigger` と
   **`untriggered-verdict`** に割り、後者は `bot=` に本文を載せる。**判定は自動で採用しない** —
   トリガー時刻が無いと「それが今の HEAD のものか」を言えないので、中断のまま理由だけを正す。
+- **`VERDICT=` 行のキーはアンカーを付けて取る。位置で取らない** — `$J` は bot コメント本文を
+  最大 110 文字**そのまま**行へ埋め、8 はその後ろに `pr=…` と `trigger=…` を足す。区切りも引用も
+  無いので、bot の本文に `pr=` や `commit=` に見える文字列が入ると（`__typename=="Bot"` しか
+  見ていない以上、別の bot の本文もここまで届く）、**「最初に見つかった `key=`」を取る実装は
+  bot 側の文字列を掴む**。`pr=` / `trigger=` / `commit=` / `review_id=` は行末側から、
+  キー名にアンカーを付けて取る。**「最後のフィールド」も使えない** —— 末尾は常に `trigger=` である。
 - **12 のフェンスがチェック名を末尾に置いているのは意図的** — `gh pr checks` のタブ区切り出力を
   `awk` の既定 FS で読むと、名前に空白を含むチェック（`Build and Test`）が来たとき `$2` が状態列を
   指さず、**落ちているチェックが緑に化ける**。`statusCheckRollup` から `status` / `conclusion` を
@@ -401,7 +439,7 @@ allowed-tools: Bash(gh api *), Bash(gh pr *), Bash(gh repo *), Bash(git *), Bash
 - **`SKIPPED` は `ALL_PASS` を止める。それでよい** — 12 は全件が literally `SUCCESS` のときだけ緑と
   読む。止まったら印字された行を読み、意図した skip なら**人が判断してマージする**。判定は緩めない。
 - **CI の `concurrency` は `cancel-in-progress: true`** — CI 待ちの最中に push すると前の run が
-  cancel され、`conclusion` が `CANCELLED` になって `NOT_ALL_PASS` に落ちる。これは fail-closed だが、
+  cancel され、`conclusion` が `CANCELLED` になって `CHECKS_FAILED` に落ちる。これは fail-closed だが、
   **待っている間に push しない**規則を守れば起きない。
 - **待っている間に push しない。`--force` は絶対に使わない** — rebase は inline comment の錨を全部
   打ち直し、開いているスレッドを迷子にし、`commit_id` の照合を無意味にする。force push が要ると
@@ -421,3 +459,14 @@ allowed-tools: Bash(gh api *), Bash(gh pr *), Bash(gh repo *), Bash(git *), Bash
   CI も `npm run check:all` を素で呼ぶので、前置するとローカルと CI の呼び方がずれる。
 - `.claude/**` と `.agents/**` は markdownlint と Prettier の**対象**（`markdownlint-cli2` は
   `dot: true` でドットディレクトリに降りる）。このファイルを編集したら `npm run check:docs` を通す。
+- **未実走の経路がある。実データで踏めていないものを列挙しておく** —— どれも fail-closed 側
+  （誤マージではなく `retry` / `timeout` / 中断）に倒れるが、**正しく分類される保証は無い**。
+  ここを踏んだ巡は、報告に「未実走の経路を通った」と書く:
+  - `VERDICT=reaction` —— この repo のトリガーはリアクションが全件ゼロで、一度も発火していない。
+  - 9 の表の**分岐履歴の中断**（`--is-ancestor` が `1`）と**ローカルに無い**（`128`）——
+    終了コード自体は実測したが、bot の review がその状態で届くところまでは踏めていない。
+  - 12 の `CHECKS_FAILED` / `SKIPPED` / legacy `StatusContext` —— この repo の CI は
+    `check` と `test` の 2 本で、いずれも `SUCCESS` 以外を返したことがない。
+  - **回帰テストを置いていない理由** —— 分類ロジックをテスト側へ写すと、正本を複製することになり、
+    `docs/development/project-structure.md` の不複製規則と衝突する。上の開示で代える。
+    フェンスを直したときは、代わりに**実データで分岐を実走し直す**（この文書の冒頭の規則）。
