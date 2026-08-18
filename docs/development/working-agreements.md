@@ -39,7 +39,17 @@ CI（`.github/workflows/ci.yaml`）の各ジョブは同じ npm スクリプト�
 `.venv` が mise の提供する Python と食い違うと、ローカルと CI の結果がずれる。疑わしいときは
 `.venv/bin/python --version` と `mise current` を比較し、必要なら `rm -rf .venv && uv sync --locked` で作り直す。
 
+**`npm run check:all` にテストは含まれない**（`check:docs` と `check:py` だけ）。CI は `check` と `test` の
+2 ジョブに分かれているので、push する前は `npm run check:all` と `npm test` の両方を通す。
+
 実行できなかった検証がある場合は、最終報告に明記する。
+
+## ワークフロー
+
+変更を PR に載せてレビューを回す作業は `/pr:review-loop`（Codex は `$review-loop`）を正本とする。
+ブランチ作成・検証・分割コミット・push・PR 作成・`@codex review` の起動・レビュー待ち・指摘の判定と修正・
+（任意で）マージ までを 1 つの手順として持ち、中断しても同じコマンドで再開できる。定義は
+[`.claude/commands/pr/review-loop.md`](../../.claude/commands/pr/review-loop.md)。
 
 ## レビュー観点
 
@@ -76,3 +86,18 @@ status line は `bun x` 経由で `ccstatusline` を起動する。bun は `mise
 ウィジェットの構成は各開発者の `~/.config/ccstatusline/settings.json` に委ねており、リポジトリでは指定しない。
 強制はしないが、出発点として使える設定例を
 [recommended/ccstatusline.md](../recommended/ccstatusline.md) に置いている。
+
+`/pr:review-loop` は `gh` を通して GitHub の API を叩く。共通設定の `allow` を空のまま保つのは、
+`Bash(git *)` のような広い許可をリポジトリ全体に恒久的に与えないため。必要な許可は各開発者が初回だけ
+`.claude/settings.local.json` に入れる。
+
+```json
+{
+  "permissions": {
+    "allow": ["Bash(gh api *)", "Bash(gh pr *)", "Bash(gh repo *)", "Bash(git *)", "Bash(npm run *)", "Bash(npm test)"]
+  }
+}
+```
+
+コマンド中の待機スクリプトが PR 番号を埋め込まず `gh repo view` で自己解決しているのは、
+許可がコマンド文字列の前方一致で当たるため。文字列が毎回同じであれば「常に許可」が 1 度で永久に効く。

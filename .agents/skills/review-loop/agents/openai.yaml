@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review Loop"
+  short_description: "分割コミット → PR → 自動レビュー起動 → 指摘の修正、を正本手順で回す"
+  default_prompt: "Use $review-loop to run the review-and-fix loop for the current work."

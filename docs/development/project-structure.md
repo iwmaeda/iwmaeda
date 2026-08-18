@@ -21,7 +21,10 @@ iwmaeda/
 │   ├── development/         # Guidelines shared by Claude Code and Codex
 │   └── recommended/         # Optional recommended configs (not enforced)
 ├── .claude/                 # Claude Code configuration
-│   └── settings.json        # Repository-wide settings (status line)
+│   ├── settings.json        # Repository-wide settings (status line)
+│   └── commands/pr/         # Slash commands (review-loop.md is the canonical workflow)
+├── .agents/                 # Codex skills
+│   └── skills/review-loop/  # Thin router; reads .claude/commands/pr/review-loop.md
 ├── .codex/                  # Codex configuration
 │   └── config.toml          # Repository-wide policy (approval, sandbox, TUI)
 ├── .github/
@@ -111,3 +114,8 @@ paths and tells Codex to read them in full. Neither entry file duplicates their 
 - `.codex/config.toml` holds repository-wide Codex policy and is read only for trusted projects
 - Per-developer state stays out of git: `.claude/settings.local.json` and personal
   `~/.codex/config.toml` preferences
+- `.claude/commands/**/*.md` are the canonical workflow procedures. `.agents/skills/<name>/SKILL.md`
+  are thin Codex routers that read the corresponding command file rather than restating it, so both
+  agents follow one procedure — the same no-duplication rule that governs `CLAUDE.md` / `AGENTS.md`
+- `.claude/**` and `.agents/**` are linted by Prettier and markdownlint (markdownlint-cli2 descends
+  into dot-directories); run `npm run check:docs` after editing them
