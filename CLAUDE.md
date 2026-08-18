@@ -19,3 +19,9 @@
 
 **LLM プロンプト:**
 @docs/development/prompting.md
+
+## Project Workflows
+
+変更を PR に載せてレビューを回す作業には `/pr:review-loop` を使用してください。
+正本は `.claude/commands/pr/review-loop.md` で、手順の位置づけは working-agreements.md の
+「ワークフロー」節が説明します。

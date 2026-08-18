@@ -14,3 +14,8 @@
 - Python: `docs/development/python.md`
 - Markdown: `docs/development/markdown.md`
 - LLM プロンプト: `docs/development/prompting.md`
+
+## Project Workflows
+
+変更を PR に載せてレビューを回す作業には、プロジェクトスキル `$review-loop` を使用してください。
+スキルの説明が、正本ワークフロー `.claude/commands/pr/review-loop.md` を選択します。
