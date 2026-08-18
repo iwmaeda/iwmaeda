@@ -90,8 +90,11 @@ allowed-tools: Bash(gh api *), Bash(gh pr *), Bash(gh repo *), Bash(git *), Bash
 
    Verified: <実際に走らせたコマンドと結果。走らせられなかったものはそう書く>
 
-   Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+   Co-Authored-By: <実行中のモデル名> <noreply@anthropic.com>
    ```
+
+   trailer は**実際に作業したモデル**を書く（この repo の履歴には `Claude Opus 5 (1M context)` と
+   `Claude Sonnet 5` の両方が在る）。Codex で回すときは Codex 側の慣習に従う。
 
    `<N>` は `git log --oneline --grep="on PR #<n>$" | wc -l` ＋ 1。**1 巡 1 コミットを基本にする**
    — 返信が sha を名乗るので、1 巡に 2 つ sha があるとどの返信も曖昧になる。スコープが本当に割れる
@@ -104,11 +107,11 @@ allowed-tools: Bash(gh api *), Bash(gh pr *), Bash(gh repo *), Bash(git *), Bash
    ```
 
 6. PR が無ければ作る。タイトルは英語の型 prefix ＋ 日本語の説明（履歴の最新の形）。本文の更新は
-   REST を通す（下の注意）:
+   `--body-file` でそのまま渡す（JSON へエスケープし直さない）:
 
    ```bash
    gh pr create --base main --title '<type>: <日本語の説明>' --body-file <scratch>/body.md
-   gh api -X PATCH "repos/iwmaeda/iwmaeda/pulls/<n>" --input <scratch>/body.json   # 更新はこちら
+   gh pr edit <n> --body-file <scratch>/body.md                                    # 更新はこちら
    ```
 
 7. レビューを起動する。**直前のトリガー時の HEAD と今の HEAD が同じなら起動してはいけない**（下の注意の
@@ -154,7 +157,7 @@ allowed-tools: Bash(gh api *), Bash(gh pr *), Bash(gh repo *), Bash(git *), Bash
    Q='query($o:String!,$n:String!,$p:Int!){repository(owner:$o,name:$n){pullRequest(number:$p){
    comments(last:30){nodes{createdAt databaseId body author{login __typename} reactionGroups{content users{totalCount}}}}
    reviews(last:10){nodes{submittedAt databaseId state author{login __typename} commit{oid}}}}}}'
-   J='.data.repository.pullRequest as $p|[($p.comments.nodes[]|select(.author.__typename!="Bot")|select(.body|test("^[@/](codex|gemini|claude) review([[:space:]]|$)"))|"TRIG \(.createdAt) \(.databaseId) \([.reactionGroups[]|select(.content=="THUMBS_UP")|.users.totalCount]|add // 0)"),($p.reviews.nodes[]|select(.author.__typename=="Bot")|"review \(.submittedAt) commit=\(.commit.oid[0:8]) \(.author.login) review_id=\(.databaseId)"),($p.comments.nodes[]|select(.author.__typename=="Bot")|"comment \(.createdAt) \(.author.login) \(.body|split("\n")[0][0:110])")]|.[]'
+   J='.data.repository.pullRequest as $p|[($p.comments.nodes[]|select(.author.__typename!="Bot")|select(.body|test("^[@/](codex|gemini|claude) review([[:space:]]|$)"))|"TRIG \(.createdAt) \(.databaseId) \([.reactionGroups[]|select(.content=="THUMBS_UP")|.users.totalCount]|add // 0)"),($p.reviews.nodes[]|select(.author.__typename=="Bot")|"review \(.submittedAt) commit=\(.commit.oid[0:8]) \(.author.login) review_id=\(.databaseId)"),($p.comments.nodes[]|select(.author.__typename=="Bot")|select(.body|test("^## Summary of Changes")|not)|"comment \(.createdAt) \(.author.login) \(.body|split("\n")[0][0:110])")]|.[]'
    F=0; TS=""; END=$((SECONDS + 480))
    while [ "$SECONDS" -lt "$END" ]; do
      O=$(timeout 25 gh api graphql -F o="${S%%/*}" -F n="${S##*/}" -F p="$PR" -f query="$Q" --jq "$J" 2>/dev/null); r=$?
@@ -191,17 +194,19 @@ allowed-tools: Bash(gh api *), Bash(gh pr *), Bash(gh repo *), Bash(git *), Bash
    7 の表のレビュアーのものか（`review` / `comment` の行は login を載せている。
    **`$J` は `__typename=="Bot"` しか見ていないので、別の bot の判定もここまで届く** ——
    この repo には `copilot-pull-request-reviewer` の review が PR #1 / #2 に実在する）。
-   そのうえで `VERDICT=review` は `commit=` を `git rev-parse --short=8 HEAD` と突き合わせる:
+   そのうえで `VERDICT=review` は `commit=` を `git rev-parse --short=8 HEAD` と突き合わせる。
+   一致しないときは `git merge-base --is-ancestor <commit> HEAD` で祖先かどうかを見る —— 祖先でも
+   ローカルにも無いのでもないなら、履歴が分岐しているので中断する:
 
    | シグナル                                          | 判定             | 次の行動                                                      |
    | ------------------------------------------------- | ---------------- | ------------------------------------------------------------- |
    | `review` ＋ `commit` が HEAD と一致               | 継続             | 10 へ                                                         |
    | `review` ＋ `commit` が HEAD の祖先               | 継続（1 度だけ） | 指摘は**捨てて** 7 を撃ち直す。2 度目は中断                   |
    | `review` ＋ `commit` がローカルに無い             | **中断**         | `git fetch` して無ければ他者の push。手を止める               |
+   | `review` ＋ `commit` が HEAD でも祖先でもない     | **中断**         | 履歴が分岐している（reset / force push の跡）。手を止める     |
    | `review` だが inline comment が 0 件              | **終了（成功）** | **判定は 10 の取得後**（8 は件数を引いていない）              |
    | `comment` ＋ `Didn't find any major issues`       | **終了（成功）** | 12 へ                                                         |
    | `comment` ＋ `You have reached your Codex usage…` | **中断**         | **再試行しない**。時間で回復する枠なので巡を消すだけ          |
-   | `comment` ＋ `## Summary of Changes`              | 継続             | gemini の前口上で判定ではない。**7 は撃たず 8 だけ撃ち直す**  |
    | `comment` ＋ 上記以外の bot 本文                  | **中断**         | 本文を全文出して人に渡す。推測しない                          |
    | `reaction`                                        | **終了（成功）** | 未観測の経路なので報告にその旨を書く                          |
    | `pending`（`--timeout` 内）                       | 継続             | **7 は撃ち直さず** 8 だけを撃ち直す                           |
@@ -264,7 +269,8 @@ allowed-tools: Bash(gh api *), Bash(gh pr *), Bash(gh repo *), Bash(git *), Bash
     `pending` も `fail` も含まないので、素朴な否定形の判定は**失敗を green に化けさせる**。だから
     `status` が全件 `COMPLETED` かつ `conclusion` が全件 `SUCCESS` のときだけ `ALL_PASS` を出し、
     それ以外（0 件・取得失敗・走行中）は `retry` に倒す。**この待ちも `run_in_background` で投げる**
-    —— 20 周 × 30 秒 = 最大 10 分で、前景だとツールの既定タイムアウトに殺されて何も出ない:
+    —— 20 周 ×（`timeout 25` ＋ `sleep 30`）で最悪 約 18 分。前景だとツールの既定タイムアウトに
+    殺されて何も出ない:
 
     ```bash
     V=CI_WAIT=timeout
@@ -343,16 +349,23 @@ allowed-tools: Bash(gh api *), Bash(gh pr *), Bash(gh repo *), Bash(git *), Bash
   改称するので **9 時間ぶん未来にずれ**、しかも**常に「HEAD のほうが新しい」側に転ぶ**。
   つまり不変条件が防ぎたい暴走を、そのまま許す向きに壊れる。変換するのは `format-local:` のほう。
 
+- **フェンスの終端 exit は、9 の表の 終了／中断 の行と `pending` だけに対応していなければならない。**
+  8 は「もう報告した」を記憶せず、`TS` はトリガー時刻に固定されたままである。だから
+  **「継続」と分類されるシグナルを終端 exit にすると、撃ち直すたびに同じ行が初回反復で再び一致して
+  即 exit する** —— `sleep 30` に一度も入らない無限ループになる。gemini の前口上
+  （`## Summary of Changes`）を `$J` の comment 分岐で落としているのはこのため。**親切心で
+  復元してはいけない。** 前口上を見せたいなら、終端にしない別の行（`INTERIM=` など）として出す。
 - **stale review は指摘を捨てて撃ち直す、拾わない** — `.line` が `null` のことが多く、既に無い差分に対する
   「この行を直せ」は対応先を推測することになる。推測で作ったコミットは「直したと称して直っていない」
   ものになり、次の巡で同じ指摘が返る。撃ち直しは 1 巡に 1 度だけ許し、2 度目は中断する。
 - **stale の判定は body ではなく commit の sha で行う** — REST の `commit_id`（GraphQL では
   `commit{oid}`）は必ず在るが、body の `**Reviewed commit:**` 行は欠けることがある。
   body を読む実装は黙って照合を飛ばす。
-- **comment・review・PR 本文の IO は `gh api`（REST）と GraphQL を通す** — この環境の `gh` は
+- **comment・review の IO は `gh api`（REST）と GraphQL を通す** — この環境の `gh` は
   **2.4.0 (2022-03)** で、`gh pr checks` は `--web` しか持たない（`--watch` も `--json` も無い）。
   マージも `gh pr merge` ではなく REST の `PUT …/merge` を使い、`state` / `mergedAt` で
-  **マージできたことを検算する**。`gh pr view --json …` / `gh pr list` と GraphQL は使ってよい。
+  **マージできたことを検算する**。`gh pr view --json …` / `gh pr list` / `gh pr edit --body-file` と
+  GraphQL は使ってよい —— **PR 本文の更新まで REST に回す必要は無い**（`--body-file` は 2.4.0 に在る）。
 - **`-f` と `-F` を取り違えるとトリガーが投稿できない** — `-F` は `@` をファイル読み込みと解釈するので
   `-F body='@codex review'` は `open codex review: no such file` で落ちる。トリガーは `-f`、
   ファイルから読む返信は `-F body=@reply.md`。**同じコマンドの中で使い分ける**。
@@ -379,6 +392,12 @@ allowed-tools: Bash(gh api *), Bash(gh pr *), Bash(gh repo *), Bash(git *), Bash
   指さず、**落ちているチェックが緑に化ける**。`statusCheckRollup` から `status` / `conclusion` を
   先に並べれば、この穴は構造的に消える（`$1` `$2` が名前に依存しない）。現在この repo のチェックは
   `check` と `test` の 2 本だけだが、外部のチェックは複数語の名前を出す。
+- **12 の jq は CheckRun 前提** — legacy の `StatusContext`（`.state` / `.context` を持ち
+  `.status` を持たない）が `statusCheckRollup` に混ざると `null null null` になり、`retry` に
+  倒れ続けて **`ALL_PASS` に到達しない**。fail-closed 側なので誤マージにはならないが、毎回
+  `CI_WAIT=timeout` で終わる。現在このリポジトリのチェックは Actions の check-run 2 本だけなので
+  起きない。**外部の status API チェックを足すときは jq を見直す**（`.status // "COMPLETED"` /
+  `.conclusion // .state` / `.name // .context` へフォールバックさせる）。
 - **`SKIPPED` は `ALL_PASS` を止める。それでよい** — 12 は全件が literally `SUCCESS` のときだけ緑と
   読む。止まったら印字された行を読み、意図した skip なら**人が判断してマージする**。判定は緩めない。
 - **CI の `concurrency` は `cancel-in-progress: true`** — CI 待ちの最中に push すると前の run が

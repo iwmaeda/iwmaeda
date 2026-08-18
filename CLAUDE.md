@@ -22,7 +22,6 @@
 
 ## Project Workflows
 
-変更を PR に載せてレビューを回す作業には `/pr:review-loop` を使用してください
-（`.claude/commands/pr/review-loop.md` が正本）。ブランチ作成・検証・分割コミット・push・PR 作成・
-`@codex review` の起動・レビュー待ち・指摘の判定と修正・（任意で）マージ までを 1 つの手順として持ちます。
-Codex は `$review-loop` を使います。
+変更を PR に載せてレビューを回す作業には `/pr:review-loop` を使用してください。
+正本は `.claude/commands/pr/review-loop.md` で、手順の位置づけは working-agreements.md の
+「ワークフロー」節が説明します。
