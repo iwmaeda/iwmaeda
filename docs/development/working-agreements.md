@@ -33,14 +33,14 @@ Claude Code と Codex を含む、プロジェクトで作業する AI エージ
 | `npm run audit`                         | 依存関係の脆弱性                                          |
 
 npm が唯一の入口であり、Python 側のコマンドも npm スクリプトから `uv run` に委譲する。
-CI（`.github/workflows/ci.yaml`）の各ジョブは同じ npm スクリプトを呼ぶため、ローカルと CI の検証内容は
+CI（`.github/workflows/ci.yaml`）の各ステップは同じ npm スクリプトを呼ぶため、ローカルと CI の検証内容は
 構造的に一致する。
 
 `.venv` が mise の提供する Python と食い違うと、ローカルと CI の結果がずれる。疑わしいときは
 `.venv/bin/python --version` と `mise current` を比較し、必要なら `rm -rf .venv && uv sync --locked` で作り直す。
 
-**`npm run check:all` にテストは含まれない**（`check:docs` と `check:py` だけ）。CI は `check` と `test` の
-2 ジョブに分かれているので、push する前は `npm run check:all` と `npm test` の両方を通す。
+**`npm run check:all` にテストは含まれない**（`check:docs` と `check:py` だけ）。CI は単一ジョブ `verify` の中で
+`check:all` → `npm test` を順に実行するので、push する前はローカルでも両方を通す。
 
 実行できなかった検証がある場合は、最終報告に明記する。
 
