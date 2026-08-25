@@ -70,8 +70,8 @@ allowed-tools: Bash(gh api *), Bash(gh pr *), Bash(gh repo *), Bash(git *), Bash
 
 3. 変更領域に最も近い検証を先に通す（`docs/development/working-agreements.md` の 検証 節）。
    **`npm run check:all` にテストは含まれない** —— `check:all` は `check:docs` と `check:py` だけで、
-   CI は `check` と `test` の 2 ジョブに分かれている。**赤い CI はレビュー 1 巡ぶんの枠を無駄にする**
-   ので、push の前に両方通す:
+   CI は単一ジョブ `verify` の中で `check:all` → `npm test` を順に実行する。**赤い CI はレビュー 1 巡ぶんの
+   枠を無駄にする**ので、push の前に両方通す:
 
    ```bash
    npm run check:all
@@ -429,11 +429,11 @@ allowed-tools: Bash(gh api *), Bash(gh pr *), Bash(gh repo *), Bash(git *), Bash
   `awk` の既定 FS で読むと、名前に空白を含むチェック（`Build and Test`）が来たとき `$2` が状態列を
   指さず、**落ちているチェックが緑に化ける**。`statusCheckRollup` から `status` / `conclusion` を
   先に並べれば、この穴は構造的に消える（`$1` `$2` が名前に依存しない）。現在この repo のチェックは
-  `check` と `test` の 2 本だけだが、外部のチェックは複数語の名前を出す。
+  `verify` 1 本だけだが、外部のチェックは複数語の名前を出す。
 - **12 の jq は CheckRun 前提** — legacy の `StatusContext`（`.state` / `.context` を持ち
   `.status` を持たない）が `statusCheckRollup` に混ざると `null null null` になり、`retry` に
   倒れ続けて **`ALL_PASS` に到達しない**。fail-closed 側なので誤マージにはならないが、毎回
-  `CI_WAIT=timeout` で終わる。現在このリポジトリのチェックは Actions の check-run 2 本だけなので
+  `CI_WAIT=timeout` で終わる。現在このリポジトリのチェックは Actions の check-run 1 本だけなので
   起きない。**外部の status API チェックを足すときは jq を見直す**（`.status // "COMPLETED"` /
   `.conclusion // .state` / `.name // .context` へフォールバックさせる）。
 - **`SKIPPED` は `ALL_PASS` を止める。それでよい** — 12 は全件が literally `SUCCESS` のときだけ緑と
@@ -466,7 +466,7 @@ allowed-tools: Bash(gh api *), Bash(gh pr *), Bash(gh repo *), Bash(git *), Bash
   - 9 の表の**分岐履歴の中断**（`--is-ancestor` が `1`）と**ローカルに無い**（`128`）——
     終了コード自体は実測したが、bot の review がその状態で届くところまでは踏めていない。
   - 12 の `CHECKS_FAILED` / `SKIPPED` / legacy `StatusContext` —— この repo の CI は
-    `check` と `test` の 2 本で、いずれも `SUCCESS` 以外を返したことがない。
+    `verify` 1 本で、`SUCCESS` 以外を返したことがない。
   - **回帰テストを置いていない理由** —— 分類ロジックをテスト側へ写すと、正本を複製することになり、
     `docs/development/project-structure.md` の不複製規則と衝突する。上の開示で代える。
     フェンスを直したときは、代わりに**実データで分岐を実走し直す**（この文書の冒頭の規則）。

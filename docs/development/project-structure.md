@@ -28,7 +28,7 @@ iwmaeda/
 ├── .codex/                  # Codex configuration
 │   └── config.toml          # Repository-wide policy (approval, sandbox, TUI)
 ├── .github/
-│   ├── workflows/ci.yaml    # CI pipeline (check + test jobs)
+│   ├── workflows/ci.yaml    # CI pipeline (single `verify` job)
 │   └── dependabot.yml       # Grouped monthly dependency updates
 ├── .vscode/                 # VS Code settings, launch config, extension hints
 ├── CLAUDE.md                # Claude Code entry point (@ imports)
@@ -103,9 +103,20 @@ paths and tells Codex to read them in full. Neither entry file duplicates their 
 
 - Triggers: push to `main` and pull requests, with a `concurrency` group that cancels superseded runs
 - `permissions: contents: read` — no job writes to the repository
-- `check` job: format, lint, and type checks (`npm run check:all`)
-- `test` job: pytest (`npm test`); it skips `npm ci` because `npm test` only shells out to `uv run pytest`
-- Toolchain provisioned via mise (jdx/mise-action); uv and npm downloads are cached across runs
+- A single `verify` job runs the checks as sequential steps: `npm run check:all` (format, lint,
+  type checks) then `npm test` (pytest)
+- **One job on purpose.** Every job pays for its own `checkout + mise + uv sync (+ npm ci)`.
+  Measured on the last two-job run (`main`, 2026-08-18): the `test` job ran 17 s, of which the
+  `npm test` step was **1 s** — the other 16 s duplicated `check`'s provisioning. The two jobs ran
+  in parallel, so the split bought no wall clock either. Add checks as steps, not as jobs
+- **Billing is not what pays for it here.** GitHub rounds Actions usage up to the whole minute
+  _per job_, so two jobs bill two minutes where one bills one — but standard runners are free on
+  public repositories, and this one is public. What consolidation saves today is the duplicated
+  provisioning; the per-job rounding is why the same layout still holds if this repository ever
+  goes private
+- Toolchain provisioned via mise (jdx/mise-action), which caches the mise-installed tools; the uv
+  and npm package caches are **not** persisted across runs (no `actions/cache`). Free minutes mean
+  the extra download costs nothing but wall clock
 
 ### Agent configuration
 
